@@ -1,0 +1,51 @@
+name: Build Windows Cyberpunk EXE
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12 (x64)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: 'x64'
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Install PyInstaller
+        run: python -m pip install --upgrade pip pyinstaller
+
+      - name: Build Windows GUI EXE
+        run: |
+          python -m PyInstaller --noconfirm --clean --onefile --windowed `
+            --name "BTC-ECDSA-Scanner-Cyber" `
+            --add-data "core;core" `
+            --add-data "ui;ui" `
+            main.py
+
+      - name: Build Windows CLI EXE
+        run: |
+          python -m PyInstaller --noconfirm --clean --onefile --console `
+            --name "BTC-ECDSA-Scanner-CLI" `
+            --add-data "core;core" `
+            --add-data "ui;ui" `
+            main.py
+
+      - name: Upload Windows EXE artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: BTC-ECDSA-Scanner-Cyber-Win64
+          path: |
+            dist/BTC-ECDSA-Scanner-Cyber.exe
+            dist/BTC-ECDSA-Scanner-CLI.exe
+            README_RU.md
